@@ -57,7 +57,7 @@
 }
 
 -(NSDictionary*) getCurrentSettings {
-	int i = [_driverTable selectedRow];
+    int i = [_driverTable selectedRow];
     
     if (i<0) return Nil;
     
@@ -69,13 +69,15 @@
     bool enableChannel = NO;
     bool enableInjection = NO;
     bool enableDumping = NO;
-	bool enableIPAndPort = NO;
     Class driverClass;
     NSDictionary *d = Nil;
     unsigned int x, y;
     int val, startCorrect = 0;
+	BOOL aeEnabledForever;
     
+	aeEnabledForever = [[controller objectForKey:@"aeForever"] boolValue] && [WaveDriverAirportExtreme monitorModeEnabled];
     [_frequence     setFloatValue:  [[controller objectForKey:@"frequence"   ] floatValue]];
+    [_aeForever     setState:       aeEnabledForever ? NSOnState : NSOffState]; 
 
     if ([_driverTable numberOfSelectedRows]) {
         d = [self getCurrentSettings];
@@ -85,16 +87,6 @@
         if ([driverClass allowsChannelHopping]) enableChannel = YES;
         if ([driverClass allowsInjection]) enableInjection = YES;
         if ([driverClass type] == passiveDriver) enableDumping = YES;
-		if ([driverClass wantsIPAndPort]) enableIPAndPort = YES;
-		if (enableIPAndPort) {
-			[_chanhop setHidden:true];
-			[_kdrone_settings setHidden:false];
-			[_kismet_host setStringValue:[d objectForKey:@"kismetserverhost"]];
-			[_kismet_port setIntValue:[[d objectForKey:@"kismetserverport"] intValue]];
-		} else {
-			[_chanhop setHidden:false];
-			[_kdrone_settings setHidden:true];
-		}
         
     }
     
@@ -104,13 +96,13 @@
     [_selNone       setEnabled:enableChannel];
     [_channelSel    setEnabled:enableChannel];
     [_firstChannel  setEnabled:enableChannel];
-	    
+    
     [_dumpDestination       setEnabled:enableDumping];
     [_dumpFilter            setEnabled:enableDumping];
     
-    [_injectionDevice        setEnabled:enableInjection];
+    [_injectionDevice       setEnabled:enableInjection];
     if (!enableInjection) {
-		[_injectionDevice setTitle:@"Injection Not Supported"];
+         [_injectionDevice setTitle:@"Injection Not Supported"];
     }else
         [_injectionDevice setTitle:@"use as primary device"];
     
@@ -169,8 +161,10 @@
     int i = [_driverTable selectedRow];
     int val = 0, startCorrect = 0;
     unsigned int x, y;
-	
+    
     [controller setObject:[NSNumber numberWithFloat: [_frequence     floatValue]]    forKey:@"frequence"];
+    [controller setObject:[NSNumber numberWithBool: [_aeForever state] == NSOnState] forKey:@"aeForever"];
+
     if (i < 0) return YES;
     d = [[self getCurrentSettings] mutableCopy];
     if (!d) return YES;
@@ -206,9 +200,6 @@
     [d setObject:[_dumpDestination stringValue] forKey:@"dumpDestination"];
     [d setObject:[NSNumber numberWithInt:[_dumpFilter selectedRow]] forKey:@"dumpFilter"];
     
-	[d setObject:[_kismet_host stringValue] forKey:@"kismetserverhost"];
-	[d setObject:[NSNumber numberWithInt:[_kismet_port intValue]] forKey:@"kismetserverport"];
-	
     a = [[controller objectForKey:@"ActiveDrivers"] mutableCopy];
     [a replaceObjectAtIndex:i withObject:d];
     [controller setObject:a forKey:@"ActiveDrivers"];
@@ -261,19 +252,10 @@
 - (IBAction)selAddDriver:(id)sender {
     NSMutableArray *drivers;
     NSString *driverClassName;
-	NSNumber *kserverport;
 	int result;
     
     driverClassName = [NSString stringWithCString:WaveDrivers[[[_driver selectedItem] tag]]];
     
-	if ([driverClassName isEqualToString:@"WaveDriverKismet"]) {
-		kserverport = [NSNumber numberWithInt:2501];
-	} else if ([driverClassName isEqualToString:@"WaveDriverKismetDrone"]) {
-		kserverport = [NSNumber numberWithInt:3501];
-	} else {
-		kserverport = [NSNumber numberWithInt:0];
-	}
-	
     drivers = [[controller objectForKey:@"ActiveDrivers"] mutableCopy];
     [drivers addObject:[NSDictionary dictionaryWithObjectsAndKeys:
         driverClassName, @"driverID",
@@ -296,14 +278,27 @@
         [NSNumber numberWithInt: 0]     , @"dumpFilter",
         @"~/DumpLog %y-%m-%d %H:%M"    , @"dumpDestination",
         [NSClassFromString(driverClassName) deviceName], @"deviceName", //todo make this unique for ever instance
-		@"127.0.0.1", @"kismetserverhost",
-		kserverport, @"kismetserverport",
         nil]];
     [controller setObject:drivers forKey:@"ActiveDrivers"];
     
+	if (([_driver indexOfSelectedItem] == 2) && ![_aeForever state] && ![WaveHelper isServiceAvailable:"AirPort_Athr5424"]) {
+		// user has chosen Airport Extreme - STRONGLY suggest enabling persistent passive mode
+		result = NSRunAlertPanel(NSLocalizedString(@"Please enable persistent Airport Extreme passive.", "Persistent dialog title"),
+								 NSLocalizedString(@"Airport Extreme passive may not work without persistent passive support enabled.  Some users have reported errors and even system crashes when attempting to use without persistent passive support.  Enable persistent passive support now?", "Persistent dialog description"),
+								 NSLocalizedString(@"Yes please!","Yes button"), NSLocalizedString(@"No, I like kernel panics.","No button"), nil);
+		if (result == 1) {
+			[_aeForever setState:1];
+			[self enableAEForever:_aeForever];
+		} else {
+			NSRunAlertPanel(NSLocalizedString(@"Don't say we didn't warn you!", "Persistent dialog title"),
+							NSLocalizedString(@"There's just no helping some people.", "Persistent dialog description"),
+							OK,nil, nil);
+		}
+	}
+	
     [_driverTable reloadData];
     [_driverTable selectRow:[drivers count]-1 byExtendingSelection:NO];
-	[self updateUI];
+    [self updateUI];
     [drivers release];
 }
 
@@ -333,5 +328,31 @@
     [self setValueForSender:_channelSel];
 }
 
+- (IBAction)enableAEForever:(id)sender {
+    if (NSAppKitVersionNumber < 824.11) {
+		NSLog(@"MacOS is not 10.4.2! AppKitVersion: %f < 824.11", NSAppKitVersionNumber);
+		
+		NSRunCriticalAlertPanel(
+                                NSLocalizedString(@"Could not enable Monitor Mode for Airport Extreme.", "Error dialog title"),
+                                NSLocalizedString(@"Incompatible MacOS version! You will need at least MacOS 10.4.2!.", "Error dialog description"),
+                                OK, nil, nil);
+        return;
+	}
+	if ([_aeForever state] == NSOnState && [WaveHelper isServiceAvailable:"AirPort_Athr5424"]) {
+		[_aeForever setState:NSOffState];
+		NSRunCriticalAlertPanel(
+                                NSLocalizedString(@"Not Needed.", "Error dialog title"),
+                                NSLocalizedString(@"Atheros based Airport Extreme cards keep track of monitor mode themselves.", "Error dialog description"),
+                                OK, nil, nil);
+        return;
+	
+	}
+    [WaveDriverAirportExtreme setMonitorMode: [_aeForever state] == NSOnState];
+    [self setValueForSender:sender];
+    NSRunCriticalAlertPanel(
+                            NSLocalizedString(@"You Must Reboot.", "Error dialog title"),
+                            NSLocalizedString(@"You must reboot after changing this setting for it to take effect.", "Error dialog description"),
+                            OK, nil, nil);
+}
 
 @end

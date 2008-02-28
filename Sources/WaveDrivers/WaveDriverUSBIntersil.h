@@ -25,16 +25,30 @@
 
 #import <Foundation/Foundation.h>
 #import "WaveDriver.h"
-#import "../Driver/USBIntersilJack/USBIntersil.h"
+#import "../Driver/USBJack/IntersilJack.h"
+//#import "../Driver/USBJack/RalinkJack.h" 
+
+class RalinkJack;
+class RT73Jack;
 
 @interface WaveDriverUSBIntersil : WaveDriver {
-    USBIntersilJack *_driver;
+    USBJack *_driver;
+    
+    enum  deviceTypes {
+        intersil = 1,
+        zydas,
+        ralink,
+		rt73
+    } deviceMake;
     
     //stuff for timed sending
     float           _interval;
     bool            _transmitting;
 	
 	int				_errors;
+
 }
 
+- (id)initAsMaster;
+//- (id)initWithMaster: (WaveDriverUSBIntersil) master;
 @end

@@ -24,17 +24,55 @@
 */
 #import "WaveDriverUSBIntersil.h"
 #import "WaveHelper.h"
+#import "../Driver/USBJack/USBJack.h"
+#import "../Driver/USBJack/RalinkJack.h"
+#import "../Driver/USBJack/RT73Jack.h"
+//#import "../Driver/USBJack/ZydasJack.h"
 
 static bool explicitlyLoadedUSBIntersil = NO;
 
 @implementation WaveDriverUSBIntersil
 
 - (id)init {
+    int timeoutCount = 0;
     self=[super init];
     if(!self) return Nil;
 
-    _driver = new USBIntersilJack;
+    _driver = new USBJack;
+    //this will only occur once!
     _driver->startMatching();
+    NSLog(@"Matching finished\n");
+    
+    while(!_driver->getDeviceType() && timeoutCount++ < 10)        //wait until the device is found
+        usleep(100);
+    
+    usleep(1000);  //we should really do locking, but since this is temp anyway...
+    
+    //I don't really like how this works.
+    switch(_driver->getDeviceType()){       //cast ourself to the approp type
+        case intersil:
+            delete(_driver);
+            _driver = new IntersilJack;
+            break;
+        case ralink:
+            delete(_driver);
+            _driver = new RalinkJack;
+            break;
+        case rt73:
+            delete(_driver);
+            _driver = new RT73Jack;
+            break;
+        case zydas:
+            break;
+        default:
+            NSLog(@"No supported USB Device found!");
+            delete(_driver);
+            _errors++;
+            return Nil;
+    }
+    
+    if(_driver->_init() != kIOReturnSuccess)
+        return Nil;
     
 	_errors = 0;
 	
@@ -56,15 +94,15 @@ static bool explicitlyLoadedUSBIntersil = NO;
 }
 
 + (bool) allowsMultipleInstances {
-    return NO;  //may be later
+    return YES;  //may be later
 }
 
 + (NSString*) description {
-    return NSLocalizedString(@"USB device with Prism2 chipset, passive mode", "long driver description");
+    return NSLocalizedString(@"USB device, passive mode", "long driver description");
 }
 
 + (NSString*) deviceName {
-    return NSLocalizedString(@"Prism2 USB device", "short driver description");
+    return NSLocalizedString(@"USB device", "short driver description");
 }
 
 #pragma mark -
@@ -129,7 +167,7 @@ static bool explicitlyLoadedUSBIntersil = NO;
 }
 
 - (bool) wakeDriver{
-    _driver = new USBIntersilJack;
+    _driver = new RalinkJack;
     _driver->startMatching();
     return YES;
 }
@@ -146,7 +184,7 @@ static bool explicitlyLoadedUSBIntersil = NO;
 			if (_errors < 3) {
 				NSLog(@"USB receiveFrame failed - attempting to reload driver");
 				delete _driver;
-				_driver = new USBIntersilJack;
+				_driver = new RalinkJack;
 				_driver->startMatching();
 			} else {
 				NSLog(@"Excessive errors received - terminating driver");

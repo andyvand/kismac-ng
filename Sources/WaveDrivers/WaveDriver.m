@@ -26,10 +26,7 @@
 #import "WaveDriverAirport.h"
 #import "WaveHelper.h"
 
-char WaveDrivers [][30] = { "WaveDriverAirport", "WaveDriverKismet", "WaveDriverKismetDrone", 
-							"WaveDriverAirportExtreme", "WaveDriverViha", "WaveDriverAtheros", 
-							"WaveDriverAironet", "WaveDriverMacJack",  "WaveDriverPrismGT", 
-							"WaveDriverUSBIntersil", "\0" };
+char WaveDrivers [][30] = { "WaveDriverAirport", "WaveDriverKismet", "WaveDriverAirportExtreme", "WaveDriverViha", "WaveDriverAtheros", "WaveDriverAironet", "WaveDriverMacJack",  "WaveDriverPrismGT", "WaveDriverUSBIntersil", "\0" };
 
 @implementation WaveDriver
 
@@ -45,10 +42,6 @@ char WaveDrivers [][30] = { "WaveDriverAirport", "WaveDriverKismet", "WaveDriver
 }
 
 + (bool) allowsInjection {
-    return NO;
-}
-
-+ (bool) wantsIPAndPort {
     return NO;
 }
 
@@ -88,10 +81,6 @@ char WaveDrivers [][30] = { "WaveDriverAirport", "WaveDriverKismet", "WaveDriver
     return [[self class] allowsInjection];
 }
 
-- (bool) wantsIPAndPort {
-    return [[self class] wantsIPAndPort];
-}
-
 - (bool) allowsChannelHopping {
     return [[self class] allowsChannelHopping];
 }
@@ -103,7 +92,6 @@ char WaveDrivers [][30] = { "WaveDriverAirport", "WaveDriverKismet", "WaveDriver
 - (bool) unloadBackend {
     return [[self class] unloadBackend];
 }
-
 - (NSString*) deviceName {
     return [[self class] deviceName];
 }
@@ -301,16 +289,6 @@ char WaveDrivers [][30] = { "WaveDriverAirport", "WaveDriverKismet", "WaveDriver
 
 - (WLFrame*) nextFrame {
     return Nil;
-}
-
-#pragma mark -
-
--(bool) startedScanning {
-	return YES;
-}
-
--(bool) stoppedScanning {
-	return YES;
 }
 
 #pragma mark -

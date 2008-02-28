@@ -413,7 +413,7 @@ inline UInt32 hashForMAC(const UInt8* val) {
             [n setNetID:++maxID];
         } else [net mergeWithNet:n];
     }
-
+      
     return YES;
 }
 
@@ -725,7 +725,7 @@ typedef int (*SORTFUNC)(void *, const void *, const void *);
     return _idList[_sortedList[index]].net;
 }
 - (WaveNet*) netForKey:(unsigned char*) ID {
-    unsigned long i, l, entry = LOOKUPSIZE;
+    unsigned int i, l, entry = LOOKUPSIZE;
     
     //lookup the net in the hashtable
     l = hashForMAC(ID);

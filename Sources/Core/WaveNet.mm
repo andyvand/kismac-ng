@@ -332,7 +332,6 @@ int lengthSort(id string1, id string2, void *context)
 
 - (id)initWithDataDictionary:(NSDictionary*)dict {
     waypoint wp;
-    char ns_dir, ew_dir;
     int bssid[6];
     NSData *data;
     NSMutableDictionary *clients;
@@ -370,9 +369,6 @@ int lengthSort(id string1, id string2, void *context)
     wp._lat = [[dict objectForKey:@"lat"] doubleValue];
     wp._long = [[dict objectForKey:@"long"] doubleValue];
     wp._elevation = [[dict objectForKey:@"elev"] doubleValue];
-    
-    (wp._lat < 0) ? ns_dir = 'S' :  ns_dir = 'N';
-    (wp._lat < 0) ? ew_dir = 'W' :  ew_dir = 'E';
     
     _ID=[[dict objectForKey:@"ID"] retain];
     if (_ID!=Nil && sscanf([_ID cString], "%2X%2X%2X%2X%2X%2X", &bssid[0], &bssid[1], &bssid[2], &bssid[3], &bssid[4], &bssid[5])!=6) {
@@ -435,12 +431,12 @@ int lengthSort(id string1, id string2, void *context)
 	aComment = [[dict objectForKey:@"comment"] retain];
     if (!aComment) aComment = [[NSString stringWithString:@""] retain];
     aLat = [[dict objectForKey:@"latString"] retain];
-    if (!aLat) aLat = [[NSString stringWithFormat:@"%f%c", wp._lat, ns_dir] retain];
+    if (!aLat) aLat = [[NSString stringWithString:@""] retain];
     aLong = [[dict objectForKey:@"longString"] retain];
-    if (!aLong) aLong = [[NSString stringWithFormat:@"%f%c", wp._long, ew_dir] retain];
+    if (!aLong) aLong = [[NSString stringWithString:@""] retain];
     aElev = [[dict objectForKey:@"elevString"] retain];
-    if (!aElev) aElev = [[NSString stringWithFormat:@"%.1f", (wp._elevation * 3.2808399)] retain];
-    
+    if (!aElev) aElev = [[NSString stringWithString:@""] retain];
+
 	_coordinates = [[dict objectForKey:@"coordinates"] retain];
     if (!_coordinates) _coordinates = [[NSMutableDictionary dictionary] retain];
     else {
@@ -935,7 +931,7 @@ int lengthSort(id string1, id string2, void *context)
 							NSAssert(_ivData[body[3]], @"unable to allocate weak container");
 						}
                         @synchronized (_ivData[body[3]]) {
-                            [_ivData[body[3]] setBytes:&body[4] forIV:&body[0]];//look here!
+                            [_ivData[body[3]] setBytes:&body[4] forIV:&body[0]];
                         }
                     }
                 }

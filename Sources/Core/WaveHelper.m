@@ -226,9 +226,7 @@ static GPSInfoController *_gc;
         if (![self isServiceAvailable:"AiroJackDriver"]) return NO;
         else return YES;
     case 4:
-        if ([self isServiceAvailable:"AirPortDriver"] || [self isServiceAvailable:"AirPortPCI"] ||
-            [self isServiceAvailable:"AirPortPCI_MM"] || [self isServiceAvailable:"AirPort_Brcm43xx"]  ||
-            [WaveHelper isServiceAvailable:"AirPort_Athr5424"] || [self isServiceAvailable:"AirPort_Athr5424ab"]) return YES;
+        if ([self isServiceAvailable:"AirPortDriver"] || [self isServiceAvailable:"AirPortPCI"] || [self isServiceAvailable:"AirPortPCI_MM"]  || [WaveHelper isServiceAvailable:"AirPort_Athr5424"]) return YES;
         else return NO;
     default:
         return NO;
@@ -316,6 +314,8 @@ static GPSInfoController *_gc;
                 [w setConfiguration: driverProps];
                 [_waveDrivers setObject:w forKey:name];
             } else {
+                return NO;
+                //this seems to hang instead of ever running the alert panel
                 NSRunCriticalAlertPanel(NSLocalizedString(@"Could not instanitiate Driver.", "Driver init failed"),
                 [NSString stringWithFormat: NSLocalizedString (@"Instanitiation Failure Description", @"LONG description of what might have gone wrong"),
                 // @"KisMAC was able to load the driver backend for %@, but it was unable to create an interface. "
@@ -324,12 +324,14 @@ static GPSInfoController *_gc;
                 name],
                 OK, Nil, Nil);
             
-                NSLog(@"Error could not instanciate driver %@", interfaceName);
+                //NSLog(@"Error could not instanciate driver %@", interfaceName);  //todo fixme!!
                 return NO;
             }
-        }
+        } 
+            //NSLog(@"Driver %@ was created.", interfaceName);
     }
 
+   
     return YES;
 }
 

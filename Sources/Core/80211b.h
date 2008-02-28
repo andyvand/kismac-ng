@@ -70,7 +70,7 @@ typedef struct {
     UInt8  tx_rtry;
     UInt8  tx_rate;
     UInt16 txControl;
-} __attribute__((packed)) WLPrismHeader;
+} WLPrismHeader;
 
 typedef struct _WLIEEEFrame {
     UInt16 frameControl;
@@ -81,6 +81,7 @@ typedef struct _WLIEEEFrame {
     UInt8  address3[6];
     UInt16 sequenceControl;
     UInt8  address4[6];
+    UInt16 dataLen;
 } __attribute__((packed)) WLIEEEFrame;
 
 

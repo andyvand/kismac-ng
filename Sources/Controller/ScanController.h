@@ -142,7 +142,6 @@ io_connect_t  root_port;    // a reference to the Root Power Domain IOService
     IBOutlet NSMenuItem         *aInjPacketsMenu;
     IBOutlet NSMenuItem         *_showNetInMap;
     IBOutlet NSMenuItem         *_showAllNetsInMap;
-	IBOutlet NSMenuItem			*_fullscreen;
     
     IBOutlet NSMenuItem         *_showNetworks;
     IBOutlet NSMenuItem         *_showTraffic;
@@ -156,7 +155,6 @@ io_connect_t  root_port;    // a reference to the Root Power Domain IOService
     IBOutlet NSDrawer           *_netHierarchDrawer;
     IBOutlet SpinChannel        *_channelProg;
 	GPSInfoController* _g;
-	NSWindow *borderlessWindow;
 }
 
 - (IBAction)updateNetworkTable:(id)sender complete:(bool)complete;
@@ -172,7 +170,6 @@ io_connect_t  root_port;    // a reference to the Root Power Domain IOService
 @interface ScanController(MenuExtension) 
 - (IBAction)showPrefs:(id)sender;
 
-- (IBAction)importKismetXML:(id)sender;
 - (IBAction)importNetstumbler:(id)sender;
 - (IBAction)importMapFromServer:(id)sender;
 
@@ -203,15 +200,11 @@ io_connect_t  root_port;    // a reference to the Root Power Domain IOService
 - (IBAction)restartGPS:(id)sender;
 - (IBAction)showCurNetArea:(id)sender;
 - (IBAction)showAllNetArea:(id)sender;
-- (IBAction)displayGPSInfo:(id)sender;
-
 
 - (IBAction)closeActiveWindow:(id)sender;
 
 - (IBAction)openWebsiteURL:(id)sender;
 - (IBAction)openDonateURL:(id)sender;
-- (IBAction)openForumsURL:(id)sender;
-- (IBAction)openFAQURL:(id)sender;
 - (IBAction)showContextHelp:(id)sender;
 
 - (IBAction)debugSaveStressTest:(id)sender;

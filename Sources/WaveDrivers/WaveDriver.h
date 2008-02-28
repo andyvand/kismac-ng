@@ -53,7 +53,6 @@ enum WaveDriverType {
 
 + (enum WaveDriverType) type;
 + (bool) allowsInjection;
-+ (bool) wantsIPAndPort;
 + (bool) allowsChannelHopping;
 + (bool) allowsMultipleInstances;
 + (NSString*) description;
@@ -64,7 +63,6 @@ enum WaveDriverType {
 
 - (enum WaveDriverType) type;
 - (bool) allowsInjection;
-- (bool) wantsIPAndPort;
 - (bool) allowsChannelHopping;
 - (bool) allowsMultipleInstances;
 - (bool) unloadBackend;
@@ -92,10 +90,6 @@ enum WaveDriverType {
 
 // for passive scanning
 - (WLFrame*) nextFrame;
-
-// for the kismet drones
--(bool) startedScanning;
--(bool) stoppedScanning;
 
 // for packet injection
 - (bool) sendFrame:(UInt8*)f withLength:(int) size atInterval:(int)interval;

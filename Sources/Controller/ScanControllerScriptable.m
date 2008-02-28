@@ -423,7 +423,7 @@
 - (BOOL)bruteforceNewsham {
     WEPCHECKS;
     
-	_crackType = 6;
+	_crackType = 2;
     [self startCrackDialogWithTitle:NSLocalizedString(@"Performing Newsham attack...", "busy dialog")];
     [_importController setMax:127];
     

@@ -32,7 +32,6 @@
 #import "DecryptController.h"
 #import "GPSInfoController.h"
 #import "HTTPStream.h"
-#import "../Core/KismetXMLImporter.h"
 #import "../Crypto/WPA.h"
 #import "TrafficController.h"
 #import "../WaveDrivers/WaveDriver.h"
@@ -40,7 +39,6 @@
 #import "MapViewAreaView.h"
 #import "WaveStorageController.h"
 #import "WaveNet.h"
-#import "FSWindow.h"
 
 @implementation ScanController(MenuExtension)
 
@@ -67,34 +65,6 @@
 #pragma mark FILE MENU
 #pragma mark -
 
-- (IBAction)importKismetXML:(id)sender {
-    KismetXMLImporter * myImporter =  [[KismetXMLImporter alloc] init];
-    
-    aOP=[NSOpenPanel openPanel];
-    [aOP setAllowsMultipleSelection:YES];
-    [aOP setCanChooseFiles:YES];
-    [aOP setCanChooseDirectories:NO];
-    if ([aOP runModalForTypes:[NSArray arrayWithObjects:@"txt", @"xml", nil]]==NSOKButton) {
-        [self stopActiveAttacks];
-        [self stopScan];
-        _refreshGUI = NO;
-        
-        int i;
-        for (i = 0; i < [[aOP filenames] count]; i++) {
-            NSString *file = [[aOP filenames] objectAtIndex:i];
-            [self showBusyWithText: [NSString stringWithFormat: @"Importing %@ as Kismet XML", [file lastPathComponent]]];    
-            [myImporter performKismetImport: file withContainer:_container];
-            [self busyDone];
-        }
-        _refreshGUI = YES;
-        
-        [self updateNetworkTable:self complete:YES];
-        [self refreshScanHierarch];
-        [_window setDocumentEdited:YES];
-        [[NSNotificationCenter defaultCenter] postNotificationName:KisMACViewItemChanged object:self];
-    }
-}
-
 - (IBAction)importMapFromServer:(id)sender {
     DownloadMapController* dmc = [[DownloadMapController alloc] initWithWindowNibName:@"DownloadMap"];
     
@@ -120,7 +90,6 @@
         [[NSNotificationCenter defaultCenter] postNotificationName:KisMACViewItemChanged object:self];
     }
 }
-
 - (void)performImportNetstumbler:(NSString*)filename {
     [_importController setTitle:[NSString stringWithFormat:NSLocalizedString(@"Importing %@...", "Status for busy dialog"), filename]];  
     
@@ -758,44 +727,6 @@
 	
 }
 
-- (IBAction)goFullscreen:(id)sender {
-	if ([_fullscreen state]==NSOffState) {
-		borderlessWindow = [[FSWindow alloc] initWithContentRect:[[NSScreen mainScreen] frame] 
-			styleMask:(NSTexturedBackgroundWindowMask) backing:NSBackingStoreBuffered defer:YES];
-		[borderlessWindow setAlphaValue:0];
-		[borderlessWindow setContentView:_mapView];
-		[borderlessWindow makeKeyAndOrderFront:borderlessWindow];
-		[borderlessWindow setLevel:kCGStatusWindowLevel + 1];	
-		int i;
-		for (i=0; i<10; i++) {
-			[borderlessWindow setAlphaValue:[borderlessWindow alphaValue] + 0.1];
-			[NSThread sleepUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.05]];
-		}
-		[NSMenu setMenuBarVisible:NO];
-		[borderlessWindow setLevel:kCGNormalWindowLevel];
-		[[WaveHelper mainWindow] setIsVisible:NO];
-		[borderlessWindow makeFirstResponder:_mappingView];
-		[_fullscreen setState:NSOnState];
-	} else {
-		[borderlessWindow setLevel:kCGStatusWindowLevel + 1];
-		[borderlessWindow makeKeyAndOrderFront:borderlessWindow];
-		[[WaveHelper mainWindow] setIsVisible:YES];
-		if (_visibleTab == tabMap) {
-			[self changedViewTo:tabNetworks contentView:_networkView];
-			[self changedViewTo:tabMap contentView:_mapView];
-		}
-		[NSMenu setMenuBarVisible:YES];
-		int i;
-		for (i=0; i<10; i++) {
-			[borderlessWindow setAlphaValue:[borderlessWindow alphaValue] - 0.1];
-			[NSThread sleepUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.05]];
-		}
-		[borderlessWindow close];
-		[[WaveHelper mainWindow] makeKeyAndOrderFront:[WaveHelper mainWindow]];
-		[_fullscreen setState:NSOffState];
-	}
-}
-
 #pragma mark -
 #pragma mark HELP MENU
 #pragma mark -
@@ -806,14 +737,6 @@
 
 - (IBAction)openDonateURL:(id)sender {
     [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"https://www.paypal.com/xclick/business=charity%40binaervarianz.de&item_name=Support+for+KisMAC+Development"]];
-}
-
-- (IBAction)openForumsURL:(id)sender{
-    [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"http://forums.kismac.de/"]];
-}
-
-- (IBAction)openFAQURL:(id)sender{
-    [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"http://trac.kismac.de/wiki/FAQ"]];
 }
 
 - (IBAction)showContextHelp:(id)sender {
